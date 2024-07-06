@@ -1,0 +1,96 @@
+---
+title: "CORS(Cross-Origin Resource Sharing)"
+date: 2024-06-29
+desc: CORS란 무엇이고 해결할 수 있는 방법 정리
+thumbnail: /react-main.png
+---
+
+# CORS란?
+
+## CORS(Cross-Origin Resource Sharing) - 교차 출처 리소스 공유 정책
+
+### 출처(Origin)란? (Protocol + Host + Post)
+
+- 출처(Origin)란 Protocol과 Host 그리고 Port까지 모두 합친 URL을 의미한다.
+  - Protocol(Scheme) : http, https
+  - Host: 사이트 도메인
+  - Port : 포트 번호
+  - Path: 사이트 내부 경로
+  - Query string : 요청의 key와 value값
+  - Fragment: 해시 태크
+
+### SOP(Same-Origin Policy) - 동일 출처 정책
+
+- SOP 정책은 동일한 출저에 대한 정책으로 동일 출처(Same-Origin)서버에 있는 리소스는 자유로이 가져올 수 있지만 다른 출처(Cross-Origin)서버에 있는 이미지나 유튜브 영상 같은 리소스는 상호작용이 불가능하다.
+- 동일 출처 정책이 필요한 이유
+  - 만약 출처에 대한 제약이 없다면, 해커가 CSRF나 XSS 등의 방법을 이용해서 해커가 심어높은 코드를 실행하여 개인 정보를 가로챌 . 수있다.
+- SOP 정책이 없는 상황이라면?
+  - 사용자가 악성 사이트에 접속
+  - 이때 해커가 몰래 심어놓은 악의적인 자바스크립트가 실행되어, 사용자가 모르는 사이에 어느 포털 사이트에 요청을 보낸다.
+  - 그럼 포털 사이트에서 해당 브라우저의 쿠키를 이용하여 로그인을 하거나 상호작용에 따른 개인 정보를 응답 값을 받은 뒤, 사이트에서 해커 서버로 재차 보낸다.
+  - 이외에도 사용자가 접속중인 내부망의 아이피와 포트를 가져오거나, 해커가 사용자 브라우저를 프록시처럼 악용할 수 있다.
+- 이러한 악의적인 경우를 방지하기 위해 SOP 정책으로 동일하지 않는 다른 출처의 스크립트가 실행되지 않도록 브라우저에서 사전에 방지하는 것이다.
+
+### **출처 비교와 차단은 브라우저가 한다!**
+
+- 출처 비교 로직은 브라우저에 구현된 스펙!
+- 서버는 리소스 요청에 의한 응답을 잘 주었지만 브라우저가 동일 출처가 아니면 CORS에러를 발생시킨다.
+- 그래서 브라우저에는 에러가 뜨지만 서버 쪽에는 정상적으로 응답을 했다고 하기 때문에 난항을 겪는 것이다.
+- 즉 응답 데이터는 멀쩡하지만 브라우저 단에서 받을 수 없도록 차단을 한 것이다.
+- **SOP정책을 위반해도 CORS 정책을 지킨 리소스 요청을 따른다면 다른 출처의 리소스라도 허용**
+
+### 요청 방식에 따라 다른 CORS 발생 여부
+
+- `<img>`, `<video>`, `<script>`,`<link>` 태그 등
+- **기본적으로 Cross-Origin 정책을 지원함**
+- `<link>`태그의 href에서 다른 사이트의 .css리소스에 접근하는 것이 가능
+- `<img>`태그의 src에서 다른 사이트의 .png, .jpg등의 리소스에 접근하는 것이 가능
+- `<script>`태그의 src에서 다른 사이트의 .js 리소스에 접근하는 것이 가능(type=”module” 속성은 제외)
+- XMLHttpRequest, Fetch API 스크립트
+  - **기본적으로 Same-Origin 정책을 따름**
+  - 다른 도메인의 소스에 대해 자바스크립트 ajax 요청 API 호출시
+  - 웹 폰트 CSS 파일 내 @font-face에서 다른 도메인의 폰트 사용 시
+  - 자바스크립트에서의 요청은 기본적으로 서로 다른 도메인에 대한 요청을 보안상 제한한다.
+  - 브라우저는 기본으로 하나의 서버 연결만 허용되도록 설정되어 있기 때문
+
+### 브라우저의 CORS 기본 동작
+
+- 클라이언트에서 HTTP요청의 헤더에 Origin을 담아 전달
+- 서버는 응답헤더에 Access-Control-Allow-Origin을 담아 클라이언트로 전달
+  - Access-Control-Allow-Origin필드는 **리소스 접근하는 것이 허용된 출처 url**
+- 클라이언트에서 Origin과 서버가 보내준 Access-Control-Allow-Origin을 비교한다.
+  - 비교 후 다르다면 CORS 에러 발생
+
+### CORS 작동 방식 3가지 시나리오
+
+예비 요청(Preflight Request)
+
+- 브라우저는 요청을 보낼때 한번에 바로 보내지 않고, 먼저 예비 요청을 보내 서버와 잘 통신되는지 확인 후 본 요청을 보낸다.
+- 예비 요청이란 브라우저 스스로 안전한 요청인지 미리 확인 하는것
+
+1. 브라우저는 서버로 HTTP OPTIONS 메소드로 예비 요청을 먼저 보낸다
+   - Origin 헤더에 자신의 출처를 넣는다.
+   - Access-Control-Request-Method = 실제 요청에 사용할 메서드
+   - Access-Control-Request-Headers = 실제 요청에 사용할 헤더 설정
+2. 서버는 이 예비 요청에 대한 응답으로 어떤 것을 허용하고 어떤 것을 금지하고 있는지에 대한 헤더 정보를 담아서 브라우저로 보낸다.
+   - Access-Control-Allow-Origin = 허용되는 Origin 목록 설정
+   - Access-Control-Allow-Methods = 허용되는 메서드들의 목록 설정
+   - Access-Control-Allow-Headers =. 허용되는 헤더들의 목록
+   - Access-Control-Max-Age = 해당 예비 요청이 브라우저에 캐시 될 수 있는 시간을 초 단위로설정
+3. 이후 브라우저는 보낸 요청과 서버 응답을 비교하여, 안전한지 확인 후 본 요청을 보낸다.
+4. 서버가 본 요청에 대한 응답을 하면 최종적으로 이 응답 데이터를 자바스크립트로 넘겨준다.
+5. 서버에 Access-Control-Allow-Origin과 Preflight 요청의 origin이 다르면 CORS에러 발생
+
+- **예비 요청의 문제점과 캐싱**
+  - 예비 요청을 보내 보안을 강화하는 목적의 취지는 좋지만 실제 요청에 걸리는 시간이 늘어나게 되어 어플리케이션 성능에 영향을 미치는 단점이 있다.
+  - 이 단점을 해결하기 위해 브라우저 캐시를 이용해 `Access-Control-Max-Age` 헤더에 캐시될 시간을 명시해 주면 예비요청을 캐싱 시켜 최적화를 시켜줄 . 수있다.
+    - 파이어폭스는 24시간 크롬은 2시간이 최대
+
+단순 요청(Simple request)
+
+- 예비 요청(Prefilght)를 생햑하고 바로 서버에 직행으로 본 요청을 보낸 후, 서버가 이에 대한 응답의 헤더에 Access-Control-Allow-Origin헤더를 보내주면 브라우저가 CORS 정책 위반 여부를 검사하는 방식
+- 예비 요청을 생략할 수 있는 조건 (단순 요청을 보낼 . 수있는 조건)
+  - 요청의 메소드는 GET, HEAD, POST중 하나
+  - Accept, Accept-Laguage, Content-Lagueage, Content-Type, DPR, Downlink, Save-Data, Viewport-Width, Width 헤더일 경우만
+  - Content-Type헤더가 application/x-www-form-urlencoded, multipart/form-data, text/plain 경우만
+  - 단순 요청이 일어나는 상황은 드물다. 왜냐하면 대부분 HTTP API요청은 text/html이나 application/json으로 통신하기 떄문

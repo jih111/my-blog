@@ -1,0 +1,41 @@
+{
+  // 사전 정의된 전역 변수 사용을 정의합니다.
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+
+  // 플러그인 패키지를 설치하고, 해당 플러그인을 plugins에 추가하여 사용할 수 있습니다.
+  // 플러그인을 추가할 때, eslint-plugin- 접두사는 생략이 가능합니다.
+  "plugins": ["react", "@typescript-eslint", "prettier"],
+
+  // 추가한 플러그인에서 사용할 규칙을 설정합니다.
+  // 플러그인은 일련의 규칙 집합이며, 플러그인을 추가하여도 규칙은 적용되지 않습니다.
+  // 규칙을 적용하기 위해서는 추가한 플러그인 중, 사용할 규칙을 추가해주어야 적용이 됩니다.
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:@next/next/recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    // eslint의 포매팅 기능을 prettier로 사용함. 항상 마지막에 세팅 되어야 함.
+    "plugin:prettier/recommended"
+  ],
+  "overrides": [],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": "latest", // 사용할 ECMAScript 버전을 설정
+    "sourceType": "module", // parser의 export 형태를 설정
+    // ECMAScript의 언어 확장 기능을 설정
+    "ecmaFeatures": {
+      "jsx": true // ECMScript 규격의 JSX 사용 여부
+    }
+  },
+  "rules": {},
+  "settings": {
+    "react": {
+      "version": "detect" // 현재 사용하고 있는 react 버전을 eslint-plugin-react가 자동으로 감지합니다.
+    }
+  }
+}
